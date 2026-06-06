@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>I built an AI that optimizes AWS Neuron kernels — and proved it on real silicon</title>
+<style>
+  body { max-width: 720px; margin: 40px auto; padding: 0 20px;
+         font-family: Georgia, "Times New Roman", serif; font-size: 21px; line-height: 1.6; color:#222; }
+  h1 { font-size: 40px; line-height:1.2; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  h2 { font-size: 30px; margin-top: 1.6em; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  h3 { font-size: 24px; margin-top: 1.3em; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .sub { font-style: italic; color:#555; font-size: 23px; }
+  blockquote { border-left: 3px solid #222; margin: 1.2em 0; padding: 4px 0 4px 20px; color:#333; font-style: italic; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.82em; background:#f2f2f2; padding:1px 5px; border-radius:4px; }
+  pre { background:#0d1117; color:#e6edf3; padding:16px 18px; border-radius:8px; overflow:auto;
+        font-family:"SF Mono",Menlo,Consolas,monospace; font-size:15px; line-height:1.45; }
+  pre code { background:none; padding:0; color:inherit; font-size:inherit; }
+  .imgnote { background:#fff7e6; border:1px dashed #d9a441; padding:10px 14px; border-radius:6px;
+             font-family:-apple-system,sans-serif; font-size:16px; color:#7a5b12; }
+  hr { border:none; border-top:1px solid #ddd; margin:2em 0; }
+  a { color:#1a6fd6; }
+</style>
+</head>
+<body>
+
+<h1>I built an AI that optimizes AWS Neuron kernels — and proved it on real silicon</h1>
+
+<p class="sub">Every Neuron tool tells you what to fix. None of them fix it, run it, and prove it. So I built the loop that does — and learned that the way everyone measures kernels is lying to them.</p>
+
+<p class="imgnote">📷 <b>Upload the hero image here</b> (drag <code>hero.png</code> into Medium at this spot).</p>
+
+<hr>
+
+<h2>The gap nobody is filling</h2>
+
+<p>If you write kernels for AWS Neuron — Trainium or Inferentia — you use NKI, the Neuron Kernel Interface, and you lean on AWS's tooling to make them fast. That tooling is genuinely good. <b>Neuron Explorer</b> profiles your kernel and, since SDK 2.29, even uses Claude to suggest optimizations. AWS's open-source <b>neuron-agentic-development</b> ships Claude Code skills that write kernels, profile them, query the profile, and debug compile errors.</p>
+
+<p>But notice what every one of these does: it <b>stops at the suggestion</b>. "Your kernel is memory-bound, try blocking the free dimension." Great — now <i>you</i> go write the variant, recompile it, check it still produces the right numbers, re-profile it, and eyeball whether it actually got faster. The loop is manual. And the riskiest part — <i>did my faster kernel stay correct?</i> — is on you.</p>
+
+<p>So I built the missing piece: <a href="https://github.com/lior-mechlovich/neuron-kernel-autotuner"><b>neuron-kernel-autotuner</b></a>, a tool that closes the loop. You point it at a kernel; it generates variants, compiles them, <b>verifies they're numerically correct</b>, profiles each on real hardware, ranks them by actual speedup, and hands you back the fastest one that's still correct — with the proof.</p>
+
+<p>It doesn't reinvent AWS's tools. It <b>orchestrates</b> them and adds the loop they don't have.</p>
+
+<h2>How it works</h2>
+
+<p>The whole thing is a closed loop:</p>
+
+<pre><code>kernel ─► baseline ─► find bottleneck ─► GENERATE variant ─► COMPILE ✓
+              ▲                                                   │
+              │                                                   ▼
+        keep top-K ◄── RANK ◄── PROFILE ◄── CORRECTNESS ✓ ◄──────┘</code></pre>
+
+<p>Each step maps onto a piece AWS already ships:</p>
+
+<ul>
+  <li><b>Capture / profile</b> → AWS <code>neuron-nki-profiling</code> + <code>neuron-nki-profile-querying</code></li>
+  <li><b>Find the bottleneck</b> → AWS <code>neuron-nki-profile-analysis-agent</code></li>
+  <li><b>Generate a variant</b> → AWS <code>neuron-nki-writing</code></li>
+  <li><b>Fix compile errors</b> → AWS <code>neuron-nki-debugging</code></li>
+  <li><b>Verify correctness</b> → <b>us — a hardened gate</b></li>
+  <li><b>Rank variants + memory + cost</b> → <b>us — the loop</b></li>
+</ul>
+
+<p>The value isn't any single step. It's making them an automated, measured, ranked, <i>verified</i> loop you run with one command.</p>
+
+<h3>The one rule that matters: correctness before speed</h3>
+
+<p>There's a paper called <a href="https://arxiv.org/abs/2511.15915">AccelOpt</a> — a research system doing LLM-driven NKI kernel optimization. Buried in it is a warning that shaped my whole design: <b>LLMs will cheat the correctness check</b>. Given a weak verifier, the model learns to compute <i>part</i> of the output, pass a lazy check, and report a huge fake speedup.</p>
+
+<p>So the correctness gate in this tool is deliberately hard to fool:</p>
+
+<ul>
+  <li>it checks <b>multiple randomized input sets</b>, not one cherry-picked case</li>
+  <li>it compares the <b>full output</b>, every element, within tolerance</li>
+  <li>the reference answer is <b>never shown to the generator</b></li>
+</ul>
+
+<p>A kernel that's faster but wrong is never reported as a winner. Ever. That gate runs <i>before</i> anything gets profiled.</p>
+
+<h2>Proving it: recreating a known speedup on real hardware</h2>
+
+<p>Claims are cheap. So I ran the whole thing end-to-end on a real Neuron instance, using a kernel pair where the answer is already known.</p>
+
+<p>AWS's <a href="https://github.com/aws-neuron/nki-samples">nki-samples</a> matmul tutorial ships five versions of the same matrix multiply, from a basic tiled one to a fully optimized one. Two of them make a perfect ground-truth test:</p>
+
+<ul>
+  <li><b>baseline:</b> <code>nki_matmul_tiled_</code> — arithmetic intensity ~102, <b>memory-bound</b></li>
+  <li><b>optimized:</b> <code>nki_matmul_fully_optimized_</code> — arithmetic intensity ~683, <b>compute-bound</b></li>
+</ul>
+
+<p>Same math (4096×1024 · 1024×2048, bf16), same correct answer, very different performance. If my measure→verify→diff pipeline is any good, it should confirm the optimized one is faster <i>and</i> still correct — with numbers.</p>
+
+<p>I launched a <code>trn1.2xlarge</code> in us-west-2 (NeuronCore-v2, about $1.34/hr), copied the repo over, and ran one command:</p>
+
+<pre><code>bash scripts/bootstrap_trn1.sh</code></pre>
+
+<p>That verifies both kernels against a PyTorch reference over three input sets, benchmarks each on the NeuronCore, and writes the artifacts.</p>
+
+<h3>The result</h3>
+
+<blockquote>
+<b>nki_matmul_tiled_</b> (baseline): <b>463 µs</b> device latency · 16.0% DMA-active · ✅ verified correct<br>
+<b>nki_matmul_fully_optimized_</b>: <b>273 µs</b> device latency · 7.5% DMA-active · ✅ verified correct<br>
+<b>= 1.70× faster on the NeuronCore, and provably still correct.</b>
+</blockquote>
+
+<p>And the profile tells you <i>why</i>: DMA-active time dropped from 16% to 7.5% — the optimized kernel is far less memory-bound, exactly what the arithmetic-intensity jump (102 → 683) predicts.</p>
+
+<h2>The plot twist: how everyone measures kernels is lying to them</h2>
+
+<p>Here's the part I didn't expect.</p>
+
+<p>My first benchmark timed the kernels the obvious way — call it through the framework (torch_xla), wrap it in <code>time.perf_counter</code>, take the median. The result?</p>
+
+<blockquote>Both kernels: <b>~57 milliseconds.</b> Speedup: <b>1.00×.</b></blockquote>
+
+<p>The optimized kernel looked <i>identical</i> to the baseline. If I'd trusted that number, I'd have concluded the optimization did nothing.</p>
+
+<p>It was wrong. Framework wall-clock is dominated by dispatch and host↔device transfer overhead — tens of milliseconds that are <b>the same for both kernels</b> and completely bury the sub-millisecond compute difference. The kernel that actually matters is a rounding error in that measurement.</p>
+
+<p>Only when I measured <b>device latency</b> — what the NeuronCore actually spends executing — did the truth appear: 463 µs vs 273 µs, the real 1.70×.</p>
+
+<p>This is the entire thesis of the project, proven by accident. <b>An autotuner cannot rank kernels on wall-clock; it has to rank on device metrics.</b> That's why the loop is built around the on-device profile, not a stopwatch. If your kernel benchmarking uses framework-level timing, it's probably hiding your wins (and your regressions).</p>
+
+<h2>What's next</h2>
+
+<p>The matmul run proves the spine — measure, verify, diff — on ground truth. The roadmap builds out from there (<a href="https://github.com/lior-mechlovich/neuron-kernel-autotuner/issues">issues on GitHub</a>):</p>
+
+<ul>
+  <li><b>v1:</b> swap the fixed pair for <b>LLM-generated</b> variants, beam search, ranking across many</li>
+  <li><b>v2:</b> an optimization memory that reuses slow→fast rewrites across runs, plus cost-per-token framing</li>
+  <li><b>v3:</b> a CI gate that fails a PR when a kernel regresses</li>
+</ul>
+
+<h2>Try it</h2>
+
+<p>Everything is open source (Apache-2.0), the pure logic has unit tests, and the proof is reproducible with one command on any AWS Neuron box (<code>trn1</code>/<code>trn2</code>/<code>inf2</code>):</p>
+
+<p><a href="https://github.com/lior-mechlovich/neuron-kernel-autotuner"><b>github.com/lior-mechlovich/neuron-kernel-autotuner</b></a></p>
+
+<p>Credits where due: this composes AWS's <a href="https://github.com/aws-neuron/neuron-agentic-development">neuron-agentic-development</a>, uses a test case from <a href="https://github.com/aws-neuron/nki-samples">nki-samples</a>, and borrows its core ideas — beam search, optimization memory, and the correctness-hardening lesson — from <a href="https://arxiv.org/abs/2511.15915">AccelOpt</a>.</p>
+
+<p><i>AWS gives you the parts. This is the loop.</i></p>
+
+</body>
+</html>

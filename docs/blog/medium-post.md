@@ -1,4 +1,4 @@
-# I built an AI that optimizes AWS Trainium kernels — and proved it on real silicon
+# I built an AI that optimizes AWS Neuron kernels — and proved it on real silicon
 
 *Every Neuron tool tells you what to fix. None of them fix it, run it, and prove it. So I built the loop that does — and learned that the way everyone measures kernels is lying to them.*
 
@@ -107,7 +107,7 @@ The matmul run proves the spine — measure, verify, diff — on ground truth. T
 
 ## Try it
 
-Everything is open source (Apache-2.0), the pure logic has unit tests, and the proof is reproducible with one command on any Trainium box:
+Everything is open source (Apache-2.0), the pure logic has unit tests, and the proof is reproducible with one command on any AWS Neuron box (`trn1`/`trn2`/`inf2`):
 
 **[github.com/lior-mechlovich/neuron-kernel-autotuner](https://github.com/lior-mechlovich/neuron-kernel-autotuner)**
 

@@ -6,7 +6,9 @@ AWS's tools *suggest* optimizations. This *applies, verifies, runs, and ranks* t
 
 ![neuron-kernel-autotuner](docs/blog/hero.png)
 
-> Status: v0. The pure logic is built and unit-tested; the first end-to-end proof runs the vendored matmul example on a real Trainium instance. Measured numbers are filled in under [Proof](#proof-matmul-on-trainium) after the run.
+**Hardware:** runs on **AWS Neuron — Trainium (`trn1`/`trn2`) and Inferentia (`inf2`)** — anything that runs NKI on NeuronCores. Validated on Trainium (`trn1.2xlarge`, NeuronCore-v2); `inf2` is the same NeuronCore-v2 and is supported but not yet separately validated.
+
+> Status: v0. The pure logic is built and unit-tested; the first end-to-end proof runs the vendored matmul example on a real Neuron instance. See [Proof](#proof-matmul-on-trainium).
 
 ---
 
@@ -95,12 +97,12 @@ from nka.parse import parse_summary     # neuron-explorer summary-json -> profil
 from nka.cost import cost_of            # $/1M-units
 ```
 
-### 2. Reproduce the matmul proof on your own Trainium
+### 2. Reproduce the matmul proof on your own Neuron box
 
-This is exactly how the 1.70× result below was produced.
+This is exactly how the 1.70× result below was produced. Works on any Neuron instance (`trn1`/`trn2`/`inf2`); we used `trn1.2xlarge`.
 
 ```bash
-# (a) launch a Neuron box — trn1.2xlarge is plenty (NeuronCore-v2), Neuron DLAMI
+# (a) launch a Neuron box — trn1.2xlarge is plenty (NeuronCore-v2; inf2 works too), Neuron DLAMI
 #     e.g. AMI "Deep Learning AMI Neuron PyTorch 2.9 (Ubuntu 24.04)", us-west-2
 
 # (b) copy this repo to the instance and SSH in

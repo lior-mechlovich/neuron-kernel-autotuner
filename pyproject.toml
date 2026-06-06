@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "neuron-kernel-autotuner"
 version = "0.1.0"
-description = "A self-improving LLM agentic auto-tuner for AWS Neuron (NKI) kernels, built on neuron-agentic-development."
+description = "A self-improving LLM agentic auto-tuner for AWS Neuron (Trainium + Inferentia, NKI) kernels, built on neuron-agentic-development."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
