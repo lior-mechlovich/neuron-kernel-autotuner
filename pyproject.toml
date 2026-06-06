@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuron-kernel-autotuner"
+version = "0.1.0"
+description = "A self-improving LLM agentic auto-tuner for AWS Neuron (NKI) kernels, built on neuron-agentic-development."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Lior Mechlovich" }]
+dependencies = ["numpy>=1.23"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools]
+packages = ["nka"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

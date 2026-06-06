@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Neuron profiling artifacts (large/binary)
+output/
+*.neff
+*.ntff
+*.pftrace
+summary.json
+
+# keep results/*.json (the proof), ignore stray binaries
+results/*.ntff
+results/*.neff
+
+# OS
+.DS_Store

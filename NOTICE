@@ -1,0 +1,22 @@
+neuron-kernel-autotuner
+Copyright 2026 Lior Mechlovich
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+------------------------------------------------------------------------------
+Third-party components
+------------------------------------------------------------------------------
+
+examples/matmul/matrix_multiplication_nki_kernels.py
+examples/matmul/matrix_multiplication_torch.py
+  Vendored from https://github.com/aws-neuron/nki-samples
+  (src/nki_samples/tutorials/matrix_multiplication/), licensed under
+  MIT No Attribution (MIT-0). Used here unmodified as the reference test case.
+
+This project composes (does not redistribute) AWS's open-source
+neuron-agentic-development (Apache-2.0):
+  https://github.com/aws-neuron/neuron-agentic-development
+
+Inspiration / prior art credited in docs:
+  AccelOpt: A Self-Improving LLM Agentic System for AI Accelerator Kernel
+  Optimization (arXiv:2511.15915).
