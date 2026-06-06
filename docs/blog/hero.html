@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1600px; height:900px; }
+  body {
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 700px at 18% -10%, #1b2a4a 0%, #0b1020 55%, #070a14 100%);
+    color: #e8edf7; overflow:hidden; position:relative;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace; }
+  .wrap { padding: 70px 84px; height:100%; display:flex; flex-direction:column; }
+  .kicker { letter-spacing:.28em; font-size:18px; font-weight:600; color:#7fb0ff; text-transform:uppercase; }
+  h1 { font-size:74px; font-weight:800; letter-spacing:-1.5px; margin-top:14px;
+       background:linear-gradient(90deg,#ffffff,#bcd2ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub { font-size:27px; color:#9fb0cc; margin-top:14px; max-width:1000px; line-height:1.35; }
+
+  .row { display:flex; gap:40px; margin-top:54px; align-items:stretch; flex:1; }
+
+  /* loop diagram */
+  .loop { flex:1.35; background:rgba(255,255,255,.03); border:1px solid rgba(127,176,255,.18);
+          border-radius:22px; padding:36px 34px; position:relative; }
+  .loop h3 { font-size:19px; color:#8aa0c4; font-weight:600; letter-spacing:.04em; margin-bottom:26px; }
+  .steps { display:flex; flex-wrap:wrap; gap:14px 12px; align-items:center; }
+  .node { display:flex; align-items:center; gap:10px; background:#10182c; border:1px solid rgba(127,176,255,.25);
+          border-radius:13px; padding:15px 18px; font-size:22px; font-weight:600; }
+  .node .t { font-size:18px; color:#cdddff; }
+  .node.gate { border-color:rgba(90,224,170,.55); background:rgba(20,52,42,.5); }
+  .node.gate .chk { color:#46e0a0; font-weight:800; }
+  .arrow { color:#5773a6; font-size:26px; font-weight:700; }
+  .loopback { margin-top:24px; font-size:18px; color:#7f93b8; display:flex; align-items:center; gap:10px; }
+  .loopback .b { color:#7fb0ff; }
+
+  /* result card */
+  .card { flex:1; background:linear-gradient(160deg,#122448,#0c1530); border:1px solid rgba(127,176,255,.28);
+          border-radius:22px; padding:34px 36px; display:flex; flex-direction:column; }
+  .card h3 { font-size:18px; color:#8aa0c4; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+  .lat { display:flex; align-items:baseline; justify-content:space-between; margin-top:22px; }
+  .lat .k { font-size:19px; color:#9fb0cc; }
+  .lat .v { font-size:40px; font-weight:800; }
+  .lat .v.base { color:#ff9d7a; }
+  .lat .v.opt { color:#46e0a0; }
+  .barrow { text-align:center; color:#5773a6; font-size:24px; margin:6px 0; }
+  .big { margin-top:18px; text-align:center; }
+  .big .x { font-size:96px; font-weight:900; letter-spacing:-2px;
+            background:linear-gradient(90deg,#46e0a0,#7fb0ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .big .cap { font-size:19px; color:#9fb0cc; margin-top:2px; }
+  .pills { display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+  .pill { font-size:15px; padding:7px 13px; border-radius:999px; background:rgba(127,176,255,.12);
+          border:1px solid rgba(127,176,255,.25); color:#bcd2ff; }
+  .pill.ok { background:rgba(70,224,160,.12); border-color:rgba(70,224,160,.35); color:#8ff0c6; }
+
+  .foot { margin-top:34px; display:flex; justify-content:space-between; align-items:center; }
+  .tag { font-size:30px; font-weight:800; color:#dfe8fb; }
+  .tag .dim { color:#7fb0ff; }
+  .repo { font-size:19px; color:#7f93b8; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">Open source · Apache-2.0 · Built on AWS neuron-agentic-development</div>
+    <h1>neuron-kernel-autotuner</h1>
+    <div class="sub">A self-improving, LLM-agentic auto-tuner for AWS Trainium (NKI) kernels. AWS's tools <i>suggest</i> fixes — this one applies, verifies, runs, and ranks them.</div>
+
+    <div class="row">
+      <div class="loop">
+        <h3>THE CLOSED LOOP — AWS ships the steps, this ships the loop</h3>
+        <div class="steps">
+          <div class="node"><span class="t">📈 baseline</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="t">✍️ generate</span></div>
+          <div class="arrow">→</div>
+          <div class="node gate"><span class="t">⚙️ compile</span> <span class="chk">✓</span></div>
+          <div class="arrow">→</div>
+          <div class="node gate"><span class="t">🔒 verify correct</span> <span class="chk">✓</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="t">⏱️ profile</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><span class="t">🏆 rank</span></div>
+        </div>
+        <div class="loopback">↺ <span class="b">beam search + optimization memory</span> &nbsp;·&nbsp; keep the fastest <b>correct</b> variant</div>
+        <div class="loopback" style="margin-top:14px;">🔒 correctness gate runs <b>before</b> speed — a fast-but-wrong kernel never wins</div>
+      </div>
+
+      <div class="card">
+        <h3>Proven on real Trainium (trn1.2xlarge)</h3>
+        <div class="lat"><span class="k mono">nki_matmul_tiled_</span><span class="v base mono">463µs</span></div>
+        <div class="barrow">↓</div>
+        <div class="lat"><span class="k mono">fully_optimized_</span><span class="v opt mono">273µs</span></div>
+        <div class="big">
+          <div class="x mono">1.70×</div>
+          <div class="cap">faster on the NeuronCore — verified correct</div>
+        </div>
+        <div class="pills">
+          <span class="pill ok">✓ numerically verified</span>
+          <span class="pill">DMA-active 16% → 7.5%</span>
+          <span class="pill mono">neuron-bench · 300 iters</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="tag">AWS gives you the parts. <span class="dim">This is the loop.</span></div>
+      <div class="repo mono">github.com/lior-mechlovich/neuron-kernel-autotuner</div>
+    </div>
+  </div>
+</body>
+</html>

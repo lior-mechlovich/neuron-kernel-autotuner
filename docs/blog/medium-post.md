@@ -2,6 +2,8 @@
 
 *Every Neuron tool tells you what to fix. None of them fix it, run it, and prove it. So I built the loop that does — and learned that the way everyone measures kernels is lying to them.*
 
+![neuron-kernel-autotuner — the closed loop, and a 1.70× verified speedup on real Trainium](hero.png)
+
 ---
 
 ## The gap nobody is filling

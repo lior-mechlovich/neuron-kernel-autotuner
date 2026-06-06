@@ -4,6 +4,8 @@
 
 AWS's tools *suggest* optimizations. This *applies, verifies, runs, and ranks* them — and keeps the fastest variant that is provably still correct.
 
+![neuron-kernel-autotuner](docs/blog/hero.png)
+
 > Status: v0. The pure logic is built and unit-tested; the first end-to-end proof runs the vendored matmul example on a real Trainium instance. Measured numbers are filled in under [Proof](#proof-matmul-on-trainium) after the run.
 
 ---
