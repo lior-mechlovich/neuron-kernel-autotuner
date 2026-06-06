@@ -121,7 +121,35 @@ What each script does:
 
 ### 3. As a Claude Code skill (the full loop)
 
-On the instance, with AWS's [neuron-agentic-development](https://github.com/aws-neuron/neuron-agentic-development) installed, drop `skill/SKILL.md` into your skills dir and run `/neuron-kernel-autotune <kernel>`. It composes their write/profile/debug skills and adds the generate→verify→profile→rank loop. See [`skill/SKILL.md`](skill/SKILL.md) and [`docs/HOWTO-matmul-e2e.md`](docs/HOWTO-matmul-e2e.md).
+The orchestrator ships as a Claude Code skill — [`skill/SKILL.md`](skill/SKILL.md) — so you can run `/neuron-kernel-autotune <kernel>` from Claude Code **on the Neuron instance** and have it drive the whole loop.
+
+**Prerequisites (all on the trn/inf2 box):**
+```bash
+# 1. AWS's agentic-dev skills (we compose these), deployed to Claude Code
+pip install neuron-agentic-development --extra-index-url https://pip.repos.neuron.amazonaws.com
+deploy-neuron-agentic-development-to-claude
+
+# 2. this project (so the nka.* helper modules import)
+git clone https://github.com/lior-mechlovich/neuron-kernel-autotuner.git
+cd neuron-kernel-autotuner && pip install -e .
+```
+
+**Install the skill** into Claude Code (personal skills dir, or `.claude/skills/` for a project):
+```bash
+mkdir -p ~/.claude/skills/neuron-kernel-autotune
+cp skill/SKILL.md ~/.claude/skills/neuron-kernel-autotune/
+# (project-local alternative: cp skill/SKILL.md .claude/skills/neuron-kernel-autotune/)
+```
+
+**Use it** — from Claude Code on the instance:
+```
+/neuron-kernel-autotune path/to/your_kernel.py
+```
+or just ask: *"optimize this NKI kernel and prove the speedup."* The skill profiles a baseline, finds the bottleneck (AWS `profile-analysis-agent`), generates variants (AWS `neuron-nki-writing`), fixes compile errors (AWS `neuron-nki-debugging`), runs the **hardened correctness gate** (`nka.verify`), profiles each on device, and **ranks** by speedup + % of peak (`nka.diff`) — keeping only the fastest *correct* variant.
+
+> **Status:** the measure → verify → diff spine is proven (the 1.70× matmul result above). Autonomous multi-variant generation/ranking inside the skill is [v1](https://github.com/lior-mechlovich/neuron-kernel-autotuner/issues/1). Today the skill is best used to profile + verify + diff a kernel and its hand-written variants; full auto-generation lands in v1.
+
+See [`skill/SKILL.md`](skill/SKILL.md) for the exact step ordering and [`docs/HOWTO-matmul-e2e.md`](docs/HOWTO-matmul-e2e.md) for a worked run.
 
 ## Why a hardened correctness gate
 
