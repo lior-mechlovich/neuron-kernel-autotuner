@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1",
+  "run_id": "nki_matmul_fully_optimized_",
+  "variant_id": "nki_matmul_fully_optimized_",
+  "kernel": "matmul",
+  "instance_type": "trn1.2xlarge",
+  "sdk_version": "2.25.3371",
+  "captured_at": null,
+  "comparability_key": {
+    "kernel": "matmul",
+    "input_shapes": [
+      [
+        4096,
+        1024
+      ],
+      [
+        1024,
+        2048
+      ]
+    ],
+    "dtype": "bfloat16",
+    "instance_type": "trn1.2xlarge"
+  },
+  "metrics": {
+    "latency_us": 273.0,
+    "mfu_percent": 0.07498418177415368,
+    "tensor_engine_active_percent": 0.12994582745613753,
+    "dma_active_percent": 0.07525162522232857,
+    "compute_vs_memory_bound": "balanced",
+    "throughput_units_s": null
+  },
+  "correctness": {
+    "verified": true,
+    "rtol": 0.01,
+    "atol": 0.0001,
+    "method": "torch.allclose over 3 randomized input sets"
+  }
+}

@@ -57,12 +57,18 @@ The first end-to-end run uses a **known-good pair** from [aws-neuron/nki-samples
 
 The tutorial proves these are *correct*; this tool proves the optimized one is *faster*, with numbers:
 
-<!-- RESULTS:START (filled by scripts/run_e2e.py) -->
-| variant | latency (µs) | % of peak | verified |
+<!-- RESULTS:START -->
+Measured on **trn1.2xlarge (NeuronCore-v2), us-west-2, Neuron SDK 2.25**. Device latency via `neuron-bench` (median of 300 iters); correctness via `torch.allclose(atol=1e-4, rtol=1e-2)` over 3 randomized input sets. Raw artifacts in [`results/`](results/).
+
+| variant | device latency (µs) | DMA-active | verified |
 |---|--:|--:|:--:|
-| `nki_matmul_tiled_` (baseline) | _TBD_ | _TBD_ | _TBD_ |
-| `nki_matmul_fully_optimized_` | _TBD_ | _TBD_ | _TBD_ |
-| **speedup** | **_TBD_×** | | |
+| `nki_matmul_tiled_` (baseline) | **463** | 16.0% | ✅ |
+| `nki_matmul_fully_optimized_` | **273** | 7.5% | ✅ |
+| **speedup** | **1.70×** | (less memory-bound) | |
+
+The optimized kernel is **1.70× faster on the NeuronCore**, and the profile shows *why*: DMA-active time drops from 16.0% to 7.5% — it's markedly less memory-bound, exactly what the arithmetic-intensity jump (102→683) predicts.
+
+> **Methodology note (and the project's thesis in one finding):** end-to-end *framework* wall-clock (torch_xla) measured ~57 ms for **both** kernels — dispatch/transfer overhead swamped the kernel and hid the difference entirely (apparent speedup 1.00×). Only **device-level** measurement (`neuron-bench` / `neuron-explorer`) surfaced the real 1.70×. An autotuner must rank on device metrics, not wall-clock. This is why the loop is built around the profile.
 <!-- RESULTS:END -->
 
 Walkthrough: [`docs/HOWTO-matmul-e2e.md`](docs/HOWTO-matmul-e2e.md).

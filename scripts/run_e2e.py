@@ -55,18 +55,27 @@ def _to_np(torch, t):
 
 
 def _bench(fn, lhsT, rhs, torch, warmup, iters):
-    """Median device latency in microseconds. Forces materialization each iter."""
+    """Mean device latency (us) via xla mark_step/wait_device_ops, NO d2h in the timed loop.
+
+    Timing wall-clock with a host copy (.cpu()) per iter is dominated by the ~tens-of-ms d2h
+    transfer, which is identical for both variants and hides the kernel difference. Instead we
+    enqueue each call and flush it with mark_step (so every iter actually executes on device),
+    then sync once with wait_device_ops and divide by iters.
+    """
+    import torch_xla.core.xla_model as xm
+
     for _ in range(warmup):
-        _ = fn(lhsT, rhs)
-        _ = _to_np(torch, _)
-    samples = []
-    for _ in range(iters):
-        t0 = time.perf_counter()
         out = fn(lhsT, rhs)
-        _ = _to_np(torch, out)  # force completion (d2h identical for both variants -> cancels in ratio)
-        samples.append((time.perf_counter() - t0) * 1e6)
-    samples.sort()
-    return samples[len(samples) // 2], out
+        xm.mark_step()
+    xm.wait_device_ops()
+
+    t0 = time.perf_counter()
+    for _ in range(iters):
+        out = fn(lhsT, rhs)
+        xm.mark_step()
+    xm.wait_device_ops()
+    per_iter_us = (time.perf_counter() - t0) / iters * 1e6
+    return per_iter_us, out
 
 
 def run_variant(name, fn, torch, device, args):

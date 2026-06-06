@@ -1,0 +1,25 @@
+{
+  "baseline": {
+    "variant": "nki_matmul_tiled_",
+    "latency_us": 463.0,
+    "mfu_percent": 0.07262983829440776,
+    "compute_vs_memory_bound": "balanced"
+  },
+  "best": {
+    "variant": "nki_matmul_fully_optimized_",
+    "latency_us": 273.0,
+    "speedup_x": 1.696,
+    "mfu_percent": 0.07498418177415368,
+    "compute_vs_memory_bound": "balanced"
+  },
+  "ranked": [
+    {
+      "variant": "nki_matmul_fully_optimized_",
+      "latency_us": 273.0,
+      "speedup_x": 1.696,
+      "mfu_percent": 0.07498418177415368,
+      "compute_vs_memory_bound": "balanced"
+    }
+  ],
+  "skipped": []
+}

@@ -1,0 +1,26 @@
+{
+  "instance_type": "trn1.2xlarge",
+  "metric": "neuroncore_device_latency_us (neuron-bench, median)",
+  "baseline": {
+    "kernel": "nki_matmul_tiled_",
+    "latency_us": 463.0,
+    "samples": 300
+  },
+  "optimized": {
+    "kernel": "nki_matmul_fully_optimized_",
+    "latency_us": 273.0,
+    "samples": 300
+  },
+  "speedup_x": 1.696,
+  "shapes": {
+    "lhs": [
+      4096,
+      1024
+    ],
+    "rhs": [
+      1024,
+      2048
+    ],
+    "dtype": "bfloat16"
+  }
+}

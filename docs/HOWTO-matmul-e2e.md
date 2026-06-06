@@ -83,16 +83,38 @@ rejected. This matters even here: it's the same gate that will guard generated v
 ## Results
 
 <!-- RESULTS:START -->
-_Filled in after the run on trn1.2xlarge (us-west-2)._
+Measured on **trn1.2xlarge (NeuronCore-v2), us-west-2, Neuron SDK 2.25**, 2026-06-06.
 
-| variant | latency (µs) | % of peak | verified |
+| variant | device latency (µs) | DMA-active % | verified |
 |---|--:|--:|:--:|
-| `nki_matmul_tiled_` | _TBD_ | _TBD_ | _TBD_ |
-| `nki_matmul_fully_optimized_` | _TBD_ | _TBD_ | _TBD_ |
-| **measured speedup** | **_TBD_×** | | |
+| `nki_matmul_tiled_` (baseline) | 463 | 16.0 | ✅ |
+| `nki_matmul_fully_optimized_` | 273 | 7.5 | ✅ |
+| **measured speedup** | **1.70×** | | |
 
-Raw artifacts: `results/profile_nki_matmul_tiled_.json`,
-`results/profile_nki_matmul_fully_optimized_.json`, `results/diff.json`.
+Device latency: `neuron-bench` median of 300 iters. Correctness: `torch.allclose(atol=1e-4,
+rtol=1e-2)` over 3 randomized input sets. The DMA-active drop (16%→7.5%) is the mechanism:
+the optimized kernel is far less memory-bound (arithmetic intensity 102→683).
+
+Raw artifacts: [`results/profile_nki_matmul_tiled_.json`](../results/profile_nki_matmul_tiled_.json),
+[`results/profile_nki_matmul_fully_optimized_.json`](../results/profile_nki_matmul_fully_optimized_.json),
+[`results/diff.json`](../results/diff.json), [`results/measured.json`](../results/measured.json).
+
+### What actually worked (gotchas from the real run)
+
+- **Framework wall-clock is useless here.** Timing the kernels through torch_xla measured
+  ~57 ms for *both* — dispatch/transfer overhead swamped the kernel (apparent speedup 1.00×).
+  We switched to **device latency** via `neuron-bench` and got the true 1.70×.
+- **`nki.benchmark` on the vendored kernels failed** in this SDK: the kernels are `@nki.jit`
+  (wrapping with `nki.benchmark` hit a `.grid`/backend-init error). The reliable path:
+  run the kernel once via the jit path with `NEURON_RT_INSPECT_*` to emit a NEFF, then
+  `neuron-bench exec <neff> -w 20 -n 300` for latency, and `neuron-explorer view
+  --output-format summary-json -n <neff> -s <ntff>` for engine/DMA metrics. See
+  `scripts/bench_matmul.sh`.
+- **`neuron-bench` DataParallel=2 fails on a single Neuron device** (LNC out of bounds); the
+  DataParallel=1 result is the per-core device latency we want.
+- **summary-json is keyed by a node hash** (`{"n_<hash>": {...}}`) with fields `total_time`,
+  `mfu_estimated_percent`, `tensor_engine_active_time_percent`, `dma_active_time_percent` —
+  `nka/parse.py` handles this shape (schema now locked against real output).
 <!-- RESULTS:END -->
 
 ## What this proves for the project

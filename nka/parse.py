@@ -88,11 +88,21 @@ def parse_summary(
 
 
 def _unwrap_summary_row(summary: dict[str, Any]) -> dict[str, Any]:
-    """Find the flat metrics dict inside common summary-json wrappers."""
+    """Find the flat metrics dict inside common summary-json wrappers.
+
+    `neuron-explorer view --output-format summary-json` returns a dict keyed by a node hash
+    (e.g. {"n_<hash>": {...metrics...}}); we take the first node's metrics. Also handles
+    list/`Summary`/`data` wrappers from other tools.
+    """
     for key in ("Summary", "summary", "data", "rows"):
         v = summary.get(key) if isinstance(summary, dict) else None
         if isinstance(v, list) and v and isinstance(v[0], dict):
             return v[0]
         if isinstance(v, dict):
             return v
+    # neuron-explorer node-hash-keyed shape: {"n_...": {metrics}}
+    if isinstance(summary, dict) and summary:
+        first = next(iter(summary.values()))
+        if isinstance(first, dict) and any(k in first for k in ("total_time", "mfu_estimated_percent")):
+            return first
     return summary
