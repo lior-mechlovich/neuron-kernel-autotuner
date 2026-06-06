@@ -73,20 +73,61 @@ The optimized kernel is **1.70× faster on the NeuronCore**, and the profile sho
 
 Walkthrough: [`docs/HOWTO-matmul-e2e.md`](docs/HOWTO-matmul-e2e.md).
 
-## Quickstart
+## Usage
+
+There are three ways to use this, from zero-hardware to full loop.
+
+### 1. Run the pure logic locally (no hardware)
+
+The parse/verify/diff/cost modules need no Neuron device:
 
 ```bash
-# unit tests for the pure logic (no hardware needed)
-pip install -e ".[dev]" && pytest -q
-
-# end-to-end on a Neuron instance (trn1/inf2, Neuron DLAMI):
-#   copy this repo to the box, then:
-bash scripts/bootstrap_trn1.sh         # installs deps + runs the matmul e2e
-# or, from the Neuron venv:
-python scripts/run_e2e.py --target trn1 --iters 50 --input-sets 3
+pip install -e ".[dev]"
+pytest -q                  # 12 tests, incl. the anti-reward-hack correctness cases
 ```
 
-As a Claude Code skill (runs on the instance, composing agentic-dev): see [`skill/SKILL.md`](skill/SKILL.md).
+```python
+from nka.diff import rank          # rank verified variants by speedup + % of peak
+from nka.verify import verify_outputs   # hardened correctness gate
+from nka.parse import parse_summary     # neuron-explorer summary-json -> profile.json
+from nka.cost import cost_of            # $/1M-units
+```
+
+### 2. Reproduce the matmul proof on your own Trainium
+
+This is exactly how the 1.70× result below was produced.
+
+```bash
+# (a) launch a Neuron box — trn1.2xlarge is plenty (NeuronCore-v2), Neuron DLAMI
+#     e.g. AMI "Deep Learning AMI Neuron PyTorch 2.9 (Ubuntu 24.04)", us-west-2
+
+# (b) copy this repo to the instance and SSH in
+scp -r . ubuntu@<instance-ip>:~/neuron-kernel-autotuner
+ssh ubuntu@<instance-ip>
+
+# (c) on the instance: one command does correctness + device speedup + artifacts
+cd ~/neuron-kernel-autotuner
+bash scripts/bootstrap_trn1.sh
+#   -> activates the Neuron venv
+#   -> run_e2e.py        : verifies both kernels vs torch over 3 input sets
+#   -> bench_matmul.sh   : neuron-bench device latency for both -> speedup
+#   -> _build_profiles.py: parse summary-json -> results/profile_*.json + diff.json
+```
+
+Result lands in [`results/`](results/): `measured.json`, `diff.json`, and a
+`profile_*.json` per variant. You should see `nki_matmul_tiled_` ≈ 463 µs and
+`nki_matmul_fully_optimized_` ≈ 273 µs (≈ 1.70×).
+
+What each script does:
+| script | purpose | needs hardware |
+|---|---|---|
+| `scripts/run_e2e.py` | run + verify correctness of both variants | yes |
+| `scripts/bench_matmul.sh` | device latency via `neuron-bench` → speedup | yes |
+| `scripts/_build_profiles.py` | parse summary-json → `profile.json` + diff | no (post-process) |
+
+### 3. As a Claude Code skill (the full loop)
+
+On the instance, with AWS's [neuron-agentic-development](https://github.com/aws-neuron/neuron-agentic-development) installed, drop `skill/SKILL.md` into your skills dir and run `/neuron-kernel-autotune <kernel>`. It composes their write/profile/debug skills and adds the generate→verify→profile→rank loop. See [`skill/SKILL.md`](skill/SKILL.md) and [`docs/HOWTO-matmul-e2e.md`](docs/HOWTO-matmul-e2e.md).
 
 ## Why a hardened correctness gate
 
