@@ -1,0 +1,96 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:1400px;height:900px;}
+  body{font-family:"Inter",-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:radial-gradient(1100px 650px at 20% -10%,#1b2a4a 0%,#0b1020 55%,#070a14 100%);
+       color:#e8edf7;overflow:hidden;}
+  .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;}
+  .wrap{padding:50px 40px;height:100%;display:flex;flex-direction:column;}
+  .kicker{letter-spacing:.26em;font-size:16px;font-weight:600;color:#7fb0ff;text-transform:uppercase;}
+  h1{font-size:46px;font-weight:800;letter-spacing:-1px;margin-top:10px;}
+  h1 .dim{color:#7fb0ff;}
+  .sub{font-size:21px;color:#9fb0cc;margin-top:8px;}
+
+  .loopbox{margin-top:34px;background:rgba(255,255,255,.025);border:1px solid rgba(127,176,255,.16);
+           border-radius:20px;padding:38px 40px;position:relative;}
+  .lrow{display:flex;align-items:center;gap:8px;justify-content:center;}
+  .arr{color:#5773a6;font-size:25px;font-weight:800;}
+  .node{display:flex;flex-direction:column;align-items:center;gap:5px;background:#101a30;
+        border:1px solid rgba(127,176,255,.3);border-radius:13px;padding:13px 14px;min-width:118px;text-align:center;}
+  .node .lab{font-size:18px;font-weight:700;color:#dbe7ff;white-space:nowrap;}
+  .node .who{font-size:12px;font-weight:600;letter-spacing:.03em;color:#6f86ad;text-transform:uppercase;white-space:nowrap;}
+  .node.us{border-color:rgba(70,224,160,.6);background:rgba(18,48,38,.55);}
+  .node.us .who{color:#46e0a0;}
+  .node.us .lab .chk{color:#46e0a0;}
+  .node.input{border-style:dashed;border-color:rgba(255,255,255,.25);background:transparent;min-width:120px;}
+  .vmid{display:flex;justify-content:flex-end;padding-right:78px;margin:6px 0;}
+  .down{color:#5773a6;font-size:30px;font-weight:800;}
+  .loopback{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:8px;color:#8aa0c4;font-size:18px;}
+  .loopback .lp{color:#7fb0ff;font-weight:700;}
+
+  .legend{display:flex;gap:26px;margin-top:30px;}
+  .col{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(127,176,255,.16);border-radius:16px;padding:24px 26px;}
+  .col.us{border-color:rgba(70,224,160,.4);background:rgba(18,48,38,.28);}
+  .col h3{font-size:17px;letter-spacing:.05em;text-transform:uppercase;color:#8aa0c4;margin-bottom:14px;}
+  .col.us h3{color:#7ff0c6;}
+  .col ul{list-style:none;display:flex;flex-direction:column;gap:11px;}
+  .col li{font-size:18px;color:#cdd9ee;line-height:1.3;}
+  .col li b{color:#fff;}
+  .col li .m{color:#9fd9ff;}
+  .col.us li .m{color:#8ff0c6;}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="kicker">How it works</div>
+  <h1>AWS ships the steps. <span class="dim">This ships the closed loop.</span></h1>
+  <div class="sub">Generate → compile → <b>verify correct</b> → profile → rank → keep the fastest correct variant.</div>
+
+  <div class="loopbox">
+    <div class="lrow">
+      <div class="node input"><span class="lab">kernel</span><span class="who">input</span></div>
+      <span class="arr">→</span>
+      <div class="node"><span class="lab">baseline</span><span class="who">aws profile</span></div>
+      <span class="arr">→</span>
+      <div class="node"><span class="lab">find bottleneck</span><span class="who">aws analysis</span></div>
+      <span class="arr">→</span>
+      <div class="node"><span class="lab">generate</span><span class="who">aws writing</span></div>
+      <span class="arr">→</span>
+      <div class="node"><span class="lab">compile <span style="color:#46e0a0">✓</span></span><span class="who">aws debugging</span></div>
+    </div>
+
+    <div class="vmid"><span class="down">↓</span></div>
+
+    <div class="lrow">
+      <div class="node us"><span class="lab">🏆 rank</span><span class="who">us · the loop</span></div>
+      <span class="arr">←</span>
+      <div class="node"><span class="lab">⏱ profile</span><span class="who">aws profile</span></div>
+      <span class="arr">←</span>
+      <div class="node us"><span class="lab">🔒 verify <span class="chk">✓</span></span><span class="who">us · hardened gate</span></div>
+      <span class="arr">←</span>
+      <div class="node" style="visibility:hidden"><span class="lab">compile</span></div>
+    </div>
+
+    <div class="loopback">↺ <span class="lp">keep top-K · beam search · optimization memory</span> &nbsp;—&nbsp; correctness runs <b>before</b> speed</div>
+  </div>
+
+  <div class="legend">
+    <div class="col">
+      <h3>AWS neuron-agentic-development provides</h3>
+      <ul>
+        <li><b>Capture / profile</b> → <span class="m mono">neuron-nki-profiling</span> + <span class="m mono">profile-querying</span></li>
+        <li><b>Find the bottleneck</b> → <span class="m mono">profile-analysis-agent</span></li>
+        <li><b>Generate a variant</b> → <span class="m mono">neuron-nki-writing</span></li>
+        <li><b>Fix compile errors</b> → <span class="m mono">neuron-nki-debugging</span></li>
+      </ul>
+    </div>
+    <div class="col us">
+      <h3>We add — the loop</h3>
+      <ul>
+        <li><b>Verify correctness</b> → <span class="m">a hardened gate (multi-input, full-output, hidden reference)</span></li>
+        <li><b>Rank + memory + cost</b> → <span class="m">device-metric ranking, slow→fast memory, $/unit</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body></html>

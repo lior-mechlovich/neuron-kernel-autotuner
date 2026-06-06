@@ -24,17 +24,7 @@ Every Neuron tool — including AWS's Claude-Sonnet-4.5-powered Neuron Explorer 
 
 ## How it works
 
-```
-                ┌─────────────────────── neuron-kernel-autotuner (the loop) ───────────────────────┐
-   kernel  ──►  │  baseline ─► seed ─► GENERATE ─► compile✓ ─► CORRECTNESS✓ ─► profile ─► rank/keep │ ──►  fastest
-               │     ▲                                                                        │      │      correct
-               │     └────────────── optimization memory (slow→fast) ◄── beam search ─────────┘      │      variant
-                └────────────────────────────────────────────────────────────────────────────────────┘
-                          │            │              │            │              │
-                          ▼            ▼              ▼            ▼              ▼
-   composes AWS    nki-profiling  profile-      nki-writing   nki-debugging  nki-profiling
-   agentic-dev:    + querying     analysis-agent (writer)     (compile fix)  + querying
-```
+![How it works — the closed loop and how each step maps onto AWS's neuron-agentic-development](docs/blog/how-it-works.png)
 
 We **compose** AWS's agentic-dev skills as the building blocks and add the parts they don't have:
 

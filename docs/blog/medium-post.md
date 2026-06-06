@@ -20,12 +20,7 @@ It doesn't reinvent AWS's tools. It **orchestrates** them and adds the loop they
 
 The whole thing is a closed loop:
 
-```
-kernel ─► baseline ─► find bottleneck ─► GENERATE variant ─► COMPILE ✓
-              ▲                                                   │
-              │                                                   ▼
-        keep top-K ◄── RANK ◄── PROFILE ◄── CORRECTNESS ✓ ◄──────┘
-```
+![How it works — the closed loop, and how each step maps onto AWS's neuron-agentic-development](how-it-works.png)
 
 Each step maps onto a piece AWS already ships:
 
